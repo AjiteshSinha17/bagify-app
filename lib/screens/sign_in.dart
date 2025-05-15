@@ -1,0 +1,101 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bagify_app/widgets/passward.dart';
+import 'package:bagify_app/widgets/submit.dart';
+
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
+
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _rememberMe = false;
+  bool _showPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _emailController.text = prefs.getString('email') ?? '';
+      _passwordController.text = prefs.getString('password') ?? '';
+      _rememberMe = prefs.getBool('rememberMe') ?? false;
+    });
+  }
+
+  Future<void> _saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', _emailController.text);
+    await prefs.setString('password', _passwordController.text);
+    await prefs.setBool('rememberMe', _rememberMe);
+  }
+
+  void _showDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text("OK")),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        TextField(
+          controller: _emailController,
+          decoration: const InputDecoration(
+            labelText: 'Email address',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        PasswordField(
+          controller: _passwordController,
+          showPassword: _showPassword,
+          onToggleVisibility: () {
+            setState(() {
+              _showPassword = !_showPassword;
+            });
+          },
+        ),
+        Row(
+          children: [
+            Checkbox(
+              value: _rememberMe,
+              onChanged: (val) {
+                setState(() {
+                  _rememberMe = val ?? false;
+                });
+              },
+            ),
+            const Text("Remember Me"),
+          ],
+        ),
+        SubmitButton(onPressed: () {
+          if (_rememberMe) {
+            _saveCredentials();
+            _showDialog('Success', 'Credentials saved successfully!');
+          } else {
+            _showDialog(
+                'Warning', 'Please check "Remember Me" to save credentials.');
+          }
+        }),
+      ],
+    );
+  }
+}
