@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bagify_app/widgets/passward.dart';
 import 'package:bagify_app/widgets/submit.dart';
+import 'package:bagify_app/screens/home.dart'; // Make sure HomeScreen exists
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -38,30 +39,37 @@ class _SignInScreenState extends State<SignInScreen> {
     await prefs.setBool('rememberMe', _rememberMe);
   }
 
-  void _showDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text("OK")),
-        ],
-      ),
+  void _validateAndSubmit() {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: All fields are required!")),
+      );
+      return;
+    }
+
+    if (_rememberMe) {
+      _saveCredentials();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Success: Credentials saved!")),
+      );
+    }
+
+    // Navigate to Home Screen after successful validation
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.all(16.0),
       children: [
         TextField(
           controller: _emailController,
           decoration: const InputDecoration(
-            labelText: 'Email address',
-            border: OutlineInputBorder(),
-          ),
+              labelText: 'Email address', border: OutlineInputBorder()),
         ),
         const SizedBox(height: 16.0),
         PasswordField(
@@ -86,15 +94,7 @@ class _SignInScreenState extends State<SignInScreen> {
             const Text("Remember Me"),
           ],
         ),
-        SubmitButton(onPressed: () {
-          if (_rememberMe) {
-            _saveCredentials();
-            _showDialog('Success', 'Credentials saved successfully!');
-          } else {
-            _showDialog(
-                'Warning', 'Please check "Remember Me" to save credentials.');
-          }
-        }),
+        SubmitButton(onPressed: _validateAndSubmit),
       ],
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bagify_app/widgets/passward.dart';
 import 'package:bagify_app/widgets/submit.dart';
+import 'package:bagify_app/screens/home.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,29 +15,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _showPassword = false;
+  bool _rememberMe = false;
+
+  void onToggleVisibility() {
+    setState(() {
+      _showPassword = !_showPassword;
+    });
+  }
+
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  bool _rememberMe = false;
-  bool _showPassword = false;
-
-  void _showDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text("OK")),
-        ],
-      ),
-    );
-  }
 
   Future<void> _saveCredentials() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', _emailController.text);
-    await prefs.setString('password', _passwordController.text);
+    await prefs.setString('fullName', _fullNameController.text.trim());
+    await prefs.setString('email', _emailController.text.trim());
+    await prefs.setString('password', _passwordController.text.trim());
     await prefs.setBool('rememberMe', _rememberMe);
   }
 
@@ -60,14 +55,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
         const SizedBox(height: 16.0),
-        PasswordField(
-          controller: _passwordController,
-          showPassword: _showPassword,
-          onToggleVisibility: () {
-            setState(() {
-              _showPassword = !_showPassword;
-            });
-          },
+        TextField(
+          controller:
+              _passwordController, // Ensuring controller is assigned properly
+          obscureText: !_showPassword,
+          decoration: InputDecoration(
+            labelText: "Password",
+            border: OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon:
+                  Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+              onPressed: onToggleVisibility,
+            ),
+          ),
         ),
         const SizedBox(height: 16.0),
         TextField(
@@ -112,16 +112,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
             final pass = _passwordController.text.trim();
             final confirm = _confirmPasswordController.text.trim();
 
-            if (name.isEmpty ||
-                email.isEmpty ||
-                pass.isEmpty ||
-                confirm.isEmpty) {
-              _showDialog("Error", "All fields are required.");
+            if (name.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Error: Name is required!")),
+              );
+            }
+            if (name.trim().isEmpty ||
+                email.trim().isEmpty ||
+                pass.trim().isEmpty ||
+                confirm.trim().isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Error: All fields are required!")),
+              );
             } else if (pass != confirm) {
-              _showDialog("Password Mismatch", "Passwords do not match.");
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text("Password Mismatch: Passwords do not match!")),
+              );
             } else {
               _saveCredentials();
-              _showDialog("Success", "Account created successfully.");
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("Success: Account created successfully!"),
+                duration: Duration(seconds: 4),
+              ));
+
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()));
             }
           },
         ),
