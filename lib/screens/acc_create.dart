@@ -19,7 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _rememberMe = false;
 
   void onToggleVisibility() {
-    setState(() {
+    setState( () {
       _showPassword = !_showPassword;
     });
   }
