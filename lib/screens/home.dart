@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:bagify_app/screens/cart.dart';
+import 'package:bagify_app/data/product_data.dart'; // Import product data
+import 'package:bagify_app/data/cart_dart.dart'; // Import cart data
+import 'package:bagify_app/screens/cart.dart'; // Import CartScreen widget
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,82 +11,104 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> brands = [
-    "Nike",
-    "Adidas",
-    "Puma",
-    "Reebok",
-    "New Balance"
-  ];
-  String selectedBrand = "Nike"; // Default selected brand
+  // Set to keep track of selected brands for filtering
+  Set<String> selectedBrands = {};
 
-  final List<Map<String, dynamic>> products = [
-    {"name": "Nike Shoes", "brand": "Nike"},
-    {"name": "Adidas Sneakers", "brand": "Adidas"},
-    {"name": "Puma Sportswear", "brand": "Puma"},
-  ];
+  // Extract unique brands from products
+  late final List<String> brands = products
+      .map<String>((product) => product["brand"] as String)
+      .toSet()
+      .toList();
 
-  void _filterByBrand(String brand) {
-    setState(() {
-      selectedBrand = brand;
-    });
-  }
-
-  void _navigateToCart(String productName) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => CartScreen(productName: productName)),
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Filter by Brand"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: brands.map((brand) {
+              return CheckboxListTile(
+                title: Text(brand),
+                value: selectedBrands.contains(brand),
+                onChanged: (bool? checked) {
+                  setState(() {
+                    checked!
+                        ? selectedBrands.add(brand)
+                        : selectedBrands.remove(brand);
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Bagify - Home"),
-      actions: [
+      appBar: AppBar(title: Text("Bagify - Home"), actions: [
+        IconButton(
+          icon: Icon(Icons.filter_list),
+          onPressed: () => _showFilterDialog(),
+        ),
+        SizedBox(width: 10),
         IconButton(
           icon: Icon(Icons.shopping_cart),
-          onPressed: () {
-            Navigator.push( 
-              context,
-              MaterialPageRoute(builder: (context) => CartScreen(productName: "")),
+          onPressed: () => Navigator.pushNamed(context, "/cart"),
+        ),
+      ]),
+      body: Padding(
+        padding: EdgeInsets.all(10),
+        child: ListView.builder(
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              elevation: 4,
+              margin: EdgeInsets.symmetric(vertical: 8),
+              child: ListTile(
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(product["description"]),
+                    Row(
+                      children: List.generate(
+                          product["rating"].round(),
+                          (_) =>
+                              Icon(Icons.star, color: Colors.orange, size: 16)),
+                    ),
+                  ],
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _navigateToCart(product["name"]),
+                ),
+              ),
             );
           },
         ),
-      ],
       ),
-      body: Column(
-        children: [
-          DropdownButton<String>(
-            value: selectedBrand,
-            items: brands.map((brand) {
-              return DropdownMenuItem(
-                value: brand,
-                child: Text(brand),
-              );
-            }).toList(),
-            onChanged: (newBrand) {
-              if (newBrand != null) _filterByBrand(newBrand);
-            },
-          ),
-          Expanded(
-            child: ListView(
-              children: products
-                  .where((p) => p["brand"] == selectedBrand)
-                  .map((product) {
-                return ListTile(
-                  title: Text(product["name"]),
-                  trailing: ElevatedButton(
-                    onPressed: () => _navigateToCart(product["name"]),
-                    child: Text("Add to Cart"),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
+    );
+  }
+
+  void _navigateToCart(String productName) {
+    addToCart(productName);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => CartScreen(productName: productName)),
     );
   }
 }
