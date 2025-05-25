@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:bagify_app/widgets/passward.dart';
 import 'package:bagify_app/widgets/submit.dart';
 import 'package:bagify_app/screens/home.dart';
 
