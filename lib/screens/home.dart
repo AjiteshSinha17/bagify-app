@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:bagify_app/data/product_data.dart'; // Import product data
-import 'package:bagify_app/data/cart_dart.dart'; // Import cart data
-import 'package:bagify_app/screens/cart.dart'; // Import CartScreen widget
+import 'package:transparent_image/transparent_image.dart';
+import 'package:bagify_app/data/product_data.dart';
+import 'package:bagify_app/screens/cart.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,10 +11,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Set to keep track of selected brands for filtering
   Set<String> selectedBrands = {};
 
-  // Extract unique brands from products
   late final List<String> brands = products
       .map<String>((product) => product["brand"] as String)
       .toSet()
@@ -56,17 +54,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Bagify - Home"), actions: [
-        IconButton(
-          icon: Icon(Icons.filter_list),
-          onPressed: () => _showFilterDialog(),
-        ),
-        SizedBox(width: 10),
-        IconButton(
-          icon: Icon(Icons.shopping_cart),
-          onPressed: () => Navigator.pushNamed(context, "/cart"),
-        ),
-      ]),
+      appBar: AppBar(
+        title: Text("Bagify - Home"),
+        actions: [
+          IconButton(
+              icon: Icon(Icons.filter_list), onPressed: _showFilterDialog),
+          SizedBox(width: 10),
+          IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () => _navigateToCart(context, "")),
+          SizedBox(width: 10),
+          IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () => Navigator.pushNamed(context, "/search")),
+          SizedBox(width: 10),
+          IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: () => Navigator.pushNamed(context, "/sign-in")),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.all(10),
         child: ListView.builder(
@@ -79,21 +85,40 @@ class _HomeScreenState extends State<HomeScreen> {
               elevation: 4,
               margin: EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
+                leading: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(color: Colors.grey[200]),
+                    ),
+                    Center(child: CircularProgressIndicator()),
+                    Positioned.fill(
+                      child: FadeInImage.memoryNetwork(
+                        placeholder: kTransparentImage,
+                        image: product["image"],
+                        fit: BoxFit.cover,
+                        imageErrorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.error, color: Colors.red);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                title: Text(product["name"]),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(product["description"]),
                     Row(
                       children: List.generate(
-                          product["rating"].round(),
-                          (_) =>
-                              Icon(Icons.star, color: Colors.orange, size: 16)),
+                        product["rating"].round(),
+                        (_) => Icon(Icons.star, color: Colors.orange, size: 16),
+                      ),
                     ),
                   ],
                 ),
                 trailing: IconButton(
                   icon: Icon(Icons.add),
-                  onPressed: () => _navigateToCart(product["name"]),
+                  onPressed: () => _navigateToCart(context, product["name"]),
                 ),
               ),
             );
@@ -103,8 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateToCart(String productName) {
-    addToCart(productName);
+  void _navigateToCart(BuildContext context, String productName) {
     Navigator.push(
       context,
       MaterialPageRoute(

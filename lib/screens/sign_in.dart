@@ -44,7 +44,7 @@ class _SignInScreenState extends State<SignInScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: All fields are required!")),
       );
-      return;
+      return; // Stop execution to prevent login
     }
 
     if (_rememberMe) {
@@ -54,7 +54,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
     }
 
-    // Navigate to Home Screen after successful validation
+    // Navigate to Home Screen **ONLY** if both fields are filled
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
