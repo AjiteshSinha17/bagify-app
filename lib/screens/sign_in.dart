@@ -40,34 +40,46 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   void _validateAndSubmit() {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+    
+  //  print("Email: $email, Password: $password");
+   
+   
+    bool isEmailValid =
+        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+            .hasMatch(email);
+
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-          "Error: All fields are required!",
-          style: TextStyle(
-            color: const Color.fromARGB(255, 245, 237, 9),
-            fontWeight: FontWeight.bold,
-            fontSize: 16.0,
-          ),
-        )),
+        SnackBar(content: Text("Error: All fields are required!")),
       );
       return; // Stop execution to prevent login
     }
 
-    if (_rememberMe) {
-      _saveCredentials();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Success: Credentials saved!",
-            style: TextStyle(
-              color: const Color.fromARGB(255, 245, 237, 9),
-              fontWeight: FontWeight.bold,
-              fontSize: 16.0,
-            )),
-      ));
+    if (!isEmailValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: Invalid email format!")),
+      );
+      return;
     }
 
-    // Navigate to Home Screen **ONLY** if both fields are filled
+    if (password.trim().length < 8 || password.trim().length > 16) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Error: Password must be between 8-16 characters!")),
+      );
+      return;
+    }
+
+    if (_rememberMe) {
+      _saveCredentials();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Success: Credentials saved!")),
+      );
+    }
+
+    // Navigate to Home Screen **ONLY** if all validations pass
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
