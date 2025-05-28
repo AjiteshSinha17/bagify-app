@@ -42,16 +42,29 @@ class _SignInScreenState extends State<SignInScreen> {
   void _validateAndSubmit() {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: All fields are required!")),
+        SnackBar(
+            content: Text(
+          "Error: All fields are required!",
+          style: TextStyle(
+            color: const Color.fromARGB(255, 245, 237, 9),
+            fontWeight: FontWeight.bold,
+            fontSize: 16.0,
+          ),
+        )),
       );
       return; // Stop execution to prevent login
     }
 
     if (_rememberMe) {
       _saveCredentials();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Success: Credentials saved!")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Success: Credentials saved!",
+            style: TextStyle(
+              color: const Color.fromARGB(255, 245, 237, 9),
+              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+            )),
+      ));
     }
 
     // Navigate to Home Screen **ONLY** if both fields are filled

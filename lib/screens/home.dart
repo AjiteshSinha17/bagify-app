@@ -74,57 +74,68 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(10),
-        child: ListView.builder(
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              elevation: 4,
-              margin: EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                leading: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Container(color: Colors.grey[200]),
-                    ),
-                    Center(child: CircularProgressIndicator()),
-                    Positioned.fill(
-                      child: FadeInImage.memoryNetwork(
-                        placeholder: kTransparentImage,
-                        image: product["image"],
-                        fit: BoxFit.cover,
-                        imageErrorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.error, color: Colors.red);
-                        },
+          padding: EdgeInsets.all(10),
+          child: ListView.builder(
+            itemCount: products
+                .where((product) =>
+                    selectedBrands.isEmpty ||
+                    selectedBrands.contains(product["brand"]))
+                .length,
+            itemBuilder: (context, index) {
+              final filteredProducts = products
+                  .where((product) =>
+                      selectedBrands.isEmpty ||
+                      selectedBrands.contains(product["brand"]))
+                  .toList();
+              final product = filteredProducts[index];
+
+              return Card(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+                margin: EdgeInsets.symmetric(vertical: 8),
+                child: ListTile(
+                  leading: FutureBuilder(
+                    future:
+                        precacheImage(NetworkImage(product["image"]), context),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return FadeInImage.memoryNetwork(
+                          placeholder: kTransparentImage,
+                          image: product["image"],
+                          imageErrorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.error, color: Colors.red),
+                        );
+                      }
+                      return SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                  ),
+                  title: Text(product["name"]),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(product["description"]),
+                      Row(
+                        children: List.generate(
+                          product["rating"].round(),
+                          (_) =>
+                              Icon(Icons.star, color: Colors.orange, size: 16),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.add),
+                    onPressed: () => _navigateToCart(context, product["name"]),
+                  ),
                 ),
-                title: Text(product["name"]),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product["description"]),
-                    Row(
-                      children: List.generate(
-                        product["rating"].round(),
-                        (_) => Icon(Icons.star, color: Colors.orange, size: 16),
-                      ),
-                    ),
-                  ],
-                ),
-                trailing: IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () => _navigateToCart(context, product["name"]),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+              );
+            },
+          )),
     );
   }
 
